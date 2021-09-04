@@ -18,7 +18,7 @@ namespace JPG {
 		std::ifstream file(filename, std::ios::in | std::ios::binary);
 
 		if (!file.is_open()) {
-			throw std::invalid_argument("Cannot open file! (Is the filename correct?)");
+			throw std::invalid_argument("Error - Cannot open file! (Is the filename correct?)");
 		}
 
 		std::unique_ptr<JPGFile> jpgContents = std::make_unique<JPGFile>();
@@ -28,7 +28,7 @@ namespace JPG {
 
 		if (markerFF != 0xFF || markerID != SOI) {
 			file.close();
-			throw std::invalid_argument("Invalid JPG file (markerFF is not FF or markerID is not SOI at the beginnning)");
+			throw std::invalid_argument("Error - Invalid JPG file (markerFF is not FF or markerID is not SOI at the beginnning)");
 		}
 		markerFF = file.get();
 		markerID = file.get();
@@ -36,10 +36,10 @@ namespace JPG {
 		while (true) {
 
 			if (markerFF != 0xFF) {
-				throw std::invalid_argument("Invalid JPG file (markerFF is not 0xFF)");
+				throw std::invalid_argument("Error - Invalid JPG file (markerFF is not 0xFF)");
 			}
 			if (!file) {
-				throw std::invalid_argument("Invalid JPG File (File ended without reaching EOF marker)");
+				throw std::invalid_argument("Error - Invalid JPG File (File ended without reaching EOF marker)");
 			}
 
 			if (markerID >= APP0 && markerID <= APP15) {
@@ -79,7 +79,7 @@ namespace JPG {
 		// read huffman coded bitstream
 		while (true) {
 			if (!file) {
-				throw std::invalid_argument("Invalid JPG File (File ended without reaching EOF marker in HCB)");
+				throw std::invalid_argument("Error - Invalid JPG File (File ended without reaching EOF marker in HCB)");
 			}
 
 			markerFF = markerID;
@@ -100,7 +100,7 @@ namespace JPG {
 					continue;
 				}
 				else {
-					throw std::invalid_argument("Invalid JPG File (Unknown marker at HCB)");
+					throw std::invalid_argument("Error - Invalid JPG File (Unknown marker at HCB)");
 				}
 			}
 			else {
@@ -109,18 +109,18 @@ namespace JPG {
 		}
 
 		if (jpgContents->numComponents != 1 && jpgContents->numComponents != 3) {
-			throw std::length_error("Invalid JPG (Unsupported NumComponents)");
+			throw std::length_error("Error - Invalid JPG (Unsupported NumComponents)");
 		}
 
 		for (uint i = 0; i < jpgContents->numComponents; i++) {
 			if (jpgContents->qtTables[jpgContents->components[i].quantizationTableID].set == false) {
-				throw std::invalid_argument("Invalid JPG (component uses an uninitialized qTable)");
+				throw std::invalid_argument("Error - Invalid JPG (component uses an uninitialized qTable)");
 			}
 			if (jpgContents->huffmanACTables[jpgContents->components[i].huffmanACTableID].set == false) {
-				throw std::invalid_argument("Invalid JPG (component uses an uninitialized AC Table)");
+				throw std::invalid_argument("Error - Invalid JPG (component uses an uninitialized AC Table)");
 			}
 			if (jpgContents->huffmanDCTables[jpgContents->components[i].huffmanDCTableID].set == false) {
-				throw std::invalid_argument("Invalid JPG (component uses an uninitialized DC Table)");
+				throw std::invalid_argument("Error - Invalid JPG (component uses an uninitialized DC Table)");
 			}
 		}
 
@@ -185,7 +185,7 @@ namespace JPG {
 			byte tableID = tableInfo & 0x0F;
 
 			if (tableID < 0 || tableID > 3) {
-				throw std::invalid_argument("Invalid JPG (table ID for DQT is invalid).");
+				throw std::invalid_argument("Error - Invalid JPG (table ID for DQT is invalid).");
 			}
 
 			jpgContents.qtTables[tableID].set = true;
@@ -205,14 +205,14 @@ namespace JPG {
 		}
 
 		if (length != 0) {
-			throw std::length_error("Invalid DQT Marker (length is invalid)");
+			throw std::length_error("Error - Invalid DQT Marker (length is invalid)");
 		}
 	}
 	// Start of scan (for hcb)
 	void JPGDecoder::ProccesStartOfScan(std::ifstream& file, JPGFile& jpgContents) {
 		std::cout << "Reading SOS Marker\n";
 		if (jpgContents.numComponents == 0) {
-			throw std::invalid_argument("Invalid SOS Marker (read SOF before SOS which is not allowed)");
+			throw std::invalid_argument("Error - Invalid SOS Marker (read SOF before SOS which is not allowed)");
 		}
 
 		uint length = (file.get() << 8) + file.get();
@@ -229,13 +229,13 @@ namespace JPG {
 				componentID++;
 			}
 			if (componentID > numComponents) {
-				throw std::length_error("Invalid SOS Marker (component ID is invalid)");
+				throw std::length_error("Error - Invalid SOS Marker (component ID is invalid)");
 			}
 
 			JPG::ColorComponent& component = jpgContents.components[componentID - 1];
 
 			if (component.used) {
-				throw std::invalid_argument("Invalid SOS Marker (reading same component ID twice)");
+				throw std::invalid_argument("Error - Invalid SOS Marker (reading same component ID twice)");
 			}
 			component.used = true;
 
@@ -243,7 +243,7 @@ namespace JPG {
 			component.huffmanDCTableID = huffmanTableIDs >> 4;
 			component.huffmanACTableID = huffmanTableIDs & 0x0F;
 			if (component.huffmanACTableID > 3 || component.huffmanDCTableID > 3) {
-				throw std::length_error("Invalid SOS Marker (one of a component's huffman table ID is invalid)");
+				throw std::length_error("Error - Invalid SOS Marker (one of a component's huffman table ID is invalid)");
 			}
 		}
 
@@ -254,14 +254,14 @@ namespace JPG {
 		jpgContents.successiveApproximationLow = successiveApproximation & 0x0F;
 
 		if (jpgContents.startOfSelection != 0 || jpgContents.endOfSelection != 63) {
-			throw std::length_error("Invalid SOS Marker (start of selection is invalid)");
+			throw std::length_error("Error - Invalid SOS Marker (start of selection is invalid)");
 		}
 		if (jpgContents.successiveApproximationHigh != 0 || jpgContents.successiveApproximationLow != 0) {
-			throw std::length_error("Invalid SOS Marker (successive approximation is invalid)");
+			throw std::length_error("Error - Invalid SOS Marker (successive approximation is invalid)");
 		}
 
 		if (length - 6 - (2 * numComponents) != 0) {
-			throw std::length_error("Invalid SOS (length is not equal to 0 after reading marker)");
+			throw std::length_error("Error - Invalid SOS (length is not equal to 0 after reading marker)");
 		}
 	}
 	void JPGDecoder::ProcessComment(std::ifstream& file, JPGFile& jpgContents) {
@@ -284,7 +284,7 @@ namespace JPG {
 			bool ACTable = tableInfo >> 4;
 
 			if (tableID < 0 || tableID > 3) {
-				throw std::invalid_argument("Invalid DHT Marker (table ID for DHT is invalid).");
+				throw std::invalid_argument("Error - Invalid DHT Marker (table ID for DHT is invalid).");
 			}
 
 			HuffmanTable& hTable = ACTable ? jpgContents.huffmanACTables[tableID] : jpgContents.huffmanDCTables[tableID];
@@ -298,7 +298,7 @@ namespace JPG {
 				numCodesOfLength[i] = numCodesOfLengthI;
 			}
 			if (numSymbols > 162) {
-				throw std::length_error("Invalid DHT Marker (too many symbols)");
+				throw std::length_error("Error - Invalid DHT Marker (too many symbols)");
 			}
 
 			for (uint i = 0; i < 16; i++) {
@@ -311,7 +311,7 @@ namespace JPG {
 			length -= 17 + numSymbols;
 		}
 		if (length != 0) {
-			throw std::length_error("Invalid DHT Marker (length is not 0)");
+			throw std::length_error("Error - Invalid DHT Marker (length is not 0)");
 		}
 	}
 	// SOF Marker
@@ -319,14 +319,14 @@ namespace JPG {
 		std::cout << "Reading SOF (Start of Frame)\n";
 
 		if (jpgContents.numComponents != 0) {
-			throw std::invalid_argument("Invalid SOF Marker (there are more than one SOF marker which is not allowed)");
+			throw std::invalid_argument("Error - Invalid SOF Marker (there are more than one SOF marker which is not allowed)");
 		}
 
 		uint length = (file.get() << 8) + file.get();
 
 		byte precision = file.get();
 		if (precision != 8) {
-			throw std::length_error("Invalid SOF Marker (precision is invalid)");
+			throw std::length_error("Error - Invalid SOF Marker (precision is invalid)");
 		}
 
 		jpgContents.height = (file.get() << 8) + file.get();
@@ -335,15 +335,15 @@ namespace JPG {
 		jpgContents.mcuWidth = (jpgContents.width + 7) / 8;
 
 		if (jpgContents.height == 0 || jpgContents.width == 0) {
-			throw std::length_error("Invalid JPG (width or height are 0)");
+			throw std::length_error("Error - Invalid JPG (width or height are 0)");
 		}
 
 		jpgContents.numComponents = file.get();
 		if (jpgContents.numComponents == 4) {
-			throw std::invalid_argument("Unsupported JPG (CMYK colors are not supported)");
+			throw std::invalid_argument("Error - Unsupported JPG (CMYK colors are not supported)");
 		}
 		if (jpgContents.numComponents == 0) {
-			throw std::length_error("Invalid SOF Marker (numComponents is 0)");
+			throw std::length_error("Error - Invalid SOF Marker (numComponents is 0)");
 		}
 
 		for (uint i = 0; i < jpgContents.numComponents; i++) {
@@ -357,31 +357,31 @@ namespace JPG {
 			}
 
 			if(componentID == 4 || componentID == 5) {
-				throw std::invalid_argument("Unsupported JPG (YIQ colors are not supported)");
+				throw std::invalid_argument("Error - Unsupported JPG (YIQ colors are not supported)");
 			}
 			if (componentID == 0 || componentID > 3) {
-				throw std::invalid_argument("Invalid JPG (componentID is invalid)");
+				throw std::invalid_argument("Error - Invalid JPG (componentID is invalid)");
 			}
 			ColorComponent& component = jpgContents.components[componentID - 1];
 			if (component.used == true) {
-				throw std::invalid_argument("Invalid SOF Marker (componentID showed up more than once)");
+				throw std::invalid_argument("Error - Invalid SOF Marker (componentID showed up more than once)");
 			}
 			component.used = true;
 			byte samplingFactor = file.get();
 			component.HSF = samplingFactor >> 4;
 			component.VSF = samplingFactor & 0x0F;
-			//if (component.HSF != 1 || component.VSF != 1)
-			//{
-			//	throw std::invalid_argument("Unsupported JPG (SF 1 is only supported for the time being)");
-			//}
+			if (component.HSF != 1 || component.VSF != 1)
+			{
+				throw std::invalid_argument("Error - Unsupported JPG (This decoder does not support subsampled JPEGs)");
+			}
 			
 			component.quantizationTableID = file.get();
 			if (component.quantizationTableID > 3) {
-				throw std::length_error("Invalid SOF Marker (QTID is greater than 3 for some reason)");
+				throw std::length_error("Error - Error - Invalid SOF Marker (QTID is greater than 3 for some reason)");
 			}
 		}
 		if (length - 8 - (3 * jpgContents.numComponents) != 0) {
-			throw std::invalid_argument("Invalid SOF Marker (length is not equal to 0)");
+			throw std::invalid_argument("Error - Invalid SOF Marker (length is not equal to 0)");
 		}
 	}
 	// DRI Marker
@@ -391,7 +391,7 @@ namespace JPG {
 		jpgContents.restartInterval = (file.get() << 8) + file.get();
 		
 		if (length - 4 != 0) {
-			throw std::length_error("Invalid DRI Marker (length is invalid)");
+			throw std::length_error("Error - Error - Invalid DRI Marker (length is invalid)");
 		}
 	}
 
@@ -518,14 +518,14 @@ namespace JPG {
 		// Read the DC symbol for this mcu component
 		byte length = GetNextSymbol(b, huffmanDCTable);
 		if (length == (byte)-1) {
-			throw std::invalid_argument("Something went wrong when trying to read a symbol (DC 1)");
+			throw std::invalid_argument("Error - Something went wrong when trying to read a symbol (DC 1)");
 		}
 		if (length > 11) {
-			throw std::length_error("DC lengths can not be longer than 11");
+			throw std::length_error("Error - Error - DC lengths can not be longer than 11");
 		}
 		int coeff = b.readBits(length);
 		if (coeff == -1) {
-			throw std::invalid_argument("Something went wrong when trying to read a symbol (DC 2)");
+			throw std::invalid_argument("Error - Something went wrong when trying to read a symbol (DC 2)");
 		}
 		if (length != 0 && coeff < (1 << (length - 1))) {
 			coeff -= (1 << length) - 1;
@@ -538,7 +538,7 @@ namespace JPG {
 		while (i < 64) {
 			byte symbol = GetNextSymbol(b, huffmanACTable);
 			if (symbol == (byte)-1) {
-				throw std::invalid_argument("Something went wrong when trying to read a symbol (AC 1)");
+				throw std::invalid_argument("Error - Something went wrong when trying to read a symbol (AC 1)");
 			}
 			if (symbol == 0x00) {
 				for (; i < 64; ++i) {
@@ -551,7 +551,7 @@ namespace JPG {
 			byte coeffLength = symbol & 0x0F;
 			coeff = 0;
 			if (coeffLength > 10) {
-				throw std::length_error("AC lengths can not be longer than 10");
+				throw std::length_error("Error - AC lengths can not be longer than 10");
 			}
 			if (symbol == 0xF0) {
 				numZeros = 16;
@@ -564,7 +564,7 @@ namespace JPG {
 			if (coeffLength != 0) {
 				coeff = b.readBits(coeffLength);
 				if (coeff == -1) {
-					throw std::invalid_argument("Something went wrong when trying to read a symbol (AC 2)");
+					throw std::invalid_argument("Error - Something went wrong when trying to read a symbol (AC 2)");
 				}
 				if (coeff < (1 << (coeffLength - 1))) {
 					coeff -= (1 << coeffLength) - 1;
