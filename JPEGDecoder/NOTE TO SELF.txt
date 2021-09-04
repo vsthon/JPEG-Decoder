@@ -1,4 +1,4 @@
-THE WIKIPEDIA ARTICLE LIED!!! THIS THING https://en.wikipedia.org/wiki/YCbCr DECIEVED ME!! DO NOT DO Ci - 128 INSTEAD DO THIS
+THE WIKIPEDIA ARTICLE LIED!!! THIS THING https://en.wikipedia.org/wiki/YCbCr DECEIVED ME!! DO NOT DO Ci - 128 INSTEAD DO THIS
 int r = int(mcus[i].y[y * 8 + x] + 1.402f * (mcus[i].cr[y * 8 + x])) + 128;
 int g = int(mcus[i].y[y * 8 + x] - 0.344136f * (mcus[i].cb[y * 8 + x]) - 0.714136f * (mcus[i].cr[y * 8 + x])) + 128;
 int b = int(mcus[i].y[y * 8 + x] + 1.772f * (mcus[i].cb[y * 8 + x])) + 128;
