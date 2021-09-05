@@ -7,4 +7,4 @@ Where I learned about the JPEG File structure:
 * https://alexdowad.github.io/visualizing-the-idct/
 * https://unix4lyfe.org/dct/
 
-This is very unoptomized and only supports non-subsampled, baseline JPEGs so you probably shouldn't use this.
+This is very unoptomized and only supports non-subsampled, huffman coded baseline JPEGs so you probably shouldn't use this.
